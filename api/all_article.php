@@ -1,21 +1,17 @@
 <?php
-header("Content-Type:application/json");
-header("Cache-Control: no-cache, no-store, must-revalidate"); // HTTP 1.1.
-header("Pragma: no-cache"); // HTTP 1.0.
-header("Expires: 0"); // Proxies.
 require '../vendor/autoload.php';
+include('../database.php');
 $nredis = new Predis\client();
 $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
-
+$jsondata = array();
  $publisher_id = $_GET['publisher_id'];
  $category_id = $_GET['category_id'];
 if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['category_id']!='') {
-	include('../database.php');
-	 require '../RedisMaster.php';
+	
 	 $rediskeynew = $_GET['key'];
-	 $allarticledatas= $nredis->get($rediskeynew);
-	if($allarticledatas){
-     echo $allarticledatas;
+	 $allarticlenew= $nredis->get($rediskeynew);
+	if($allarticlenew){
+     echo $allarticlenew;
     }else{
 	 $sqlq = "SELECT id FROM dev_performo.publisher_category_mapping WHERE category_id='$category_id' AND publisher_id='$publisher_id'";
     $resultsql = pg_query($sqlq); 
@@ -25,7 +21,7 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['cat
 	  $query = "SELECT * FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id
 	 WHERE pub_category_id=$pub_id ORDER BY pubdate DESC LIMIT $page_number"; 
     $result = pg_query($query); 
-    $jsondata = array();
+    
 	while ($row = pg_fetch_array($result)) {
 	$title = $row['title'];
 	$pubdate = $row['pubdate'];
@@ -50,7 +46,7 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['cat
     ];
 	response($title,$pubdate,$link,$category,$publisher,$author,$guid,$mediaurl,$response_code,$response_desc);
     }  
-    $key="articledata";
+    $key="all_article_new";
     $nredis->set($key,json_encode($jsondata));
   
  }

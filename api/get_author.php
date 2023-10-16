@@ -3,19 +3,18 @@ header("Content-Type:application/json");
 require '../vendor/autoload.php';
 $nredis = new Predis\client();
 $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
-
-
+$jsondata = array();
 if ($_GET['token_key']=="@123abcd1366") {
 	include('../database.php');
 	 $rediskeyauth = $_GET['key'];
 	 $article_id = $_GET['article_id'];
 	 $allkeyauth = $nredis->get($rediskeyauth);
-	//if($allkeyauth){
-    //  echo $allkeyauth;
-    // }else{
+    if($allkeyauth){
+      echo $allkeyauth;
+     }else{
 	 $query = "SELECT * FROM dev_performo.article_master WHERE id='$article_id'"; 
     $result = pg_query($query); 
-    $jsondata = array();
+    
 	while ($rowkey = pg_fetch_array($result)) {
 	$author = $rowkey['author'];
 	$response_code = 0;
@@ -25,10 +24,9 @@ if ($_GET['token_key']=="@123abcd1366") {
     ];
 	response($author,$response_code,$response_desc);
     }
-    //print_r($jsondata);
     $nredis->set("articleauthor", json_encode($jsondata));
-    $nredis->flushall();
- //}
+   // $nredis->flushall();
+ }
 }else{
 	response(NULL, NULL, 400,"Invalid Request");
 	}

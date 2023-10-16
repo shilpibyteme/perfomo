@@ -7,6 +7,7 @@ include('../database.php');
 $jsondata = array();
 if ($_GET['token_key']=="@123abcd1366") {
 	 $category = $_GET['category'];
+	 $userid = $_GET['userid'];
 	 $rediskeyatr = $_GET['key'];
 	
 	 //$guid = $_GET['guid'];
@@ -15,12 +16,13 @@ if ($_GET['token_key']=="@123abcd1366") {
      echo $preferencuser;
     }else{
 
-	 $query = "SELECT * FROM dev_performo.user_preferences WHERE category='$category'";
+	 $query = "SELECT * FROM dev_performo.user_preferences WHERE category='$category' AND user_id=$userid";
     $result = pg_query($query);    
 	while ($row = pg_fetch_array($result)) {
 	$category = $row['category'];
 	$user_id = $row['user_id'];
-	$publisher_name = str_replace(" ","",$row['publisher_name']);
+	//$publisher_name = str_replace(" ","",$row['publisher_name']);
+	$publisher_name = $row['publisher_name'];
 	$response_code = 0;
 	$response_desc = 'successful';
 	$jsondata[] = [

@@ -9,9 +9,16 @@ $jsondata = array();
 if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['category_id']!='') {
 	
 	 $rediskeynew = $_GET['key'];
-	 $allarticlenew= $nredis->get($rediskeynew);
+	$allarticlenew = $nredis->zRevRange($rediskeynew, 0, -1);
+	// print_r($allarticlenew); die;
 	if($allarticlenew){
-     echo $allarticlenew;
+		$jsonArray = [];
+		foreach ($allarticlenew as $jsonString) {
+		    $jsonArray[] = json_decode($jsonString, true);
+		}
+		$jsonResultnew = json_encode($jsonArray);
+		echo $jsonResultnew;
+
     }else{
 	 $sqlq = "SELECT id FROM dev_performo.publisher_category_mapping WHERE category_id='$category_id' AND publisher_id='$publisher_id'";
     $resultsql = pg_query($sqlq); 
@@ -21,7 +28,7 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['cat
 	  $query = "SELECT * FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id
 	 WHERE pub_category_id=$pub_id ORDER BY pubdate DESC LIMIT $page_number"; 
     $result = pg_query($query); 
-    
+    $i=1;
 	while ($row = pg_fetch_array($result)) {
 	$title = $row['title'];
 	$pubdate = $row['pubdate'];
@@ -34,7 +41,7 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['cat
 	$mediaurl = $row['mediaurl'];
 	$response_code = 0;
 	$response_desc = 'successful';
-	$jsondata[] = [
+	$jsondata= [
         'title' => $title,
         'pubdate' => $pubdate,
         'link' => $link,
@@ -45,10 +52,12 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']!=''&& $_GET['cat
         'mediaurl' => $mediaurl
     ];
 	response($title,$pubdate,$link,$category,$publisher,$author,$guid,$mediaurl,$response_code,$response_desc);
+	 $i++;
+	 $key="all_article_new";
+	$nredis->zAdd($key,$i,json_encode($jsondata));
     }  
-    $key="all_article_new";
-    $nredis->set($key,json_encode($jsondata));
-  
+    
+ 
  }
   
 }else{

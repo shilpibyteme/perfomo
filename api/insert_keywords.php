@@ -11,6 +11,7 @@ if ($_GET['token_key']=="@123abcd1366") {
 	 $rediskeyuser = $_GET['key'];
 	 $publisher_id = $_GET['publisher_id'];
 	 $article_id=$_GET['article_id'];
+	 $category_id=$_GET['category_id'];
 	 $allusers = $nredis->get($rediskeyuser);
 	if($allusers){
       echo $allusers;

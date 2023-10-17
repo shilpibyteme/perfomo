@@ -8,6 +8,8 @@ if ($_GET['token_key']=="@123abcd1366") {
 	include('../database.php');
 	 $rediskeyauth = $_GET['key'];
 	 $article_id = $_GET['article_id'];
+	 $publisher_id = $_GET['publisher_id'];
+	 $category_id = $_GET['category_id'];
 	 $allkeyauth = $nredis->get($rediskeyauth);
     if($allkeyauth){
       echo $allkeyauth;
@@ -24,7 +26,8 @@ if ($_GET['token_key']=="@123abcd1366") {
     ];
 	response($author,$response_code,$response_desc);
     }
-    $nredis->set("articleauthor", json_encode($jsondata));
+   // $nredis->set("articleauthor", json_encode($jsondata));
+    $nredis->rawCommand('JSON.SET', $key, '.', $jsonData);
    // $nredis->flushall();
  }
 }else{

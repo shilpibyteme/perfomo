@@ -10,7 +10,8 @@ if ($_GET['token_key']=="@123abcd1366") {
 	 require '../RedisMaster.php';
 	 $rediskeyuser = $_GET['key'];
 	 $publisher_id = $_GET['publisher_id'];
-	 $allusers = $nredis->get($rediskeyuser);
+	 $allusers = $nredis->executeRaw(['JSON.GET', $rediskeyuser]);
+	// $allusers = $nredis->Get($rediskeyuser);
 	if($allusers){
       echo $allusers;
      }else{
@@ -19,25 +20,27 @@ if ($_GET['token_key']=="@123abcd1366") {
     $jsondata = array();
 	while ($row = pg_fetch_array($result)) {
 	$name = $row['name'];
-	$password = $row['password'];
 	$response_code = 0;
 	$response_desc = 'successful';
 	$jsondata[] = [
-        'name' => $name,
-        'password' => $password,
+        'name' => $name
     ];
-	response($name,$password,$response_code,$response_desc);
+    $jsonData = json_encode($jsondata);
+	response($name,$response_code,$response_desc);
+	//$nredis->Set("usersdata", json_encode($jsondata));
+	$key="usersdata";
+	$nredis->executeRaw(['JSON.SET', $key, '.', $jsonData]);
+    
     }
-    $nredis->set("users_data", json_encode($jsondata));
-    $nredis->flushall();
+    
+    //$nredis->flushall();
  }
 }else{
 	response(NULL, NULL, 400,"Invalid Request");
 	}
 
-function response($name,$password,$response_code,$response_desc){
+function response($name,$response_code,$response_desc){
 	$response['title'] = $name;
-	$response['password'] = $password;
 	$response['response_code'] = $response_code;
 	$response['response_desc'] = $response_desc;
 	$json_response = json_encode($response);

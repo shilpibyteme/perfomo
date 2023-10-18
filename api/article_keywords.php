@@ -4,13 +4,17 @@ require '../vendor/autoload.php';
 $nredis = new Predis\client();
 $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
 $jsondata = array();
+$article_id = $_GET['article_id'];
 if ($_GET['token_key']=="@123abcd1366") {
 	include('../database.php');
-	 $rediskeyuser = $_GET['key'];
-	 $article_id = $_GET['article_id'];
-	 $allkeyword = $nredis->get($rediskeyuser);
-	if($allkeyword){
-      echo $allkeyword;
+	 $rediskey = 'keyword__'.$article_id;
+     if($nredis->exists($rediskey)){
+	 $allarticlekey = $nredis->zRevRange($rediskey, 0, -1);
+        foreach ($allarticlekey as $jsonString) {
+            $jsonArray = json_decode($jsonString, true);
+            echo json_encode($jsonArray); // Output each keyword as a separate JSON object
+        }
+
      }else{
 	 $query = "SELECT * FROM dev_performo.article_keyword_mapping WHERE article_id='$article_id'";
     $result = pg_query($query); 
@@ -26,11 +30,14 @@ if ($_GET['token_key']=="@123abcd1366") {
         'keywordfirstseendate' => $keywordfirstseendate,
         'keywordlastseendate'=>$keywordlastseendate,
     ];
+      $key ='keyword__'.$article_id;
+      $score = strtotime($keywordfirstseendate);
+     $nredis->zAdd($key,$score, json_encode($jsondata));
+     $ttlInSeconds = 3600;
+     $nredis->expire($key, $ttlInSeconds);
 	response($keyword_name,$keywordfirstseendate,$keywordlastseendate,$response_code,$response_desc);
     }
-    //print_r($jsondata);
-    $nredis->set("articlekeywords", json_encode($jsondata));
-    //$nredis->flushall();
+
  }
 }else{
 	response(NULL, NULL, 400,"Invalid Request");

@@ -3,19 +3,19 @@ header("Content-Type:application/json");
 require '../vendor/autoload.php';
 $nredis = new Predis\client();
 $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
+include('../database.php');
+require '../RedisMaster.php';
 
-
-if ($_GET['token_key']=="@123abcd1366") {
-	include('../database.php');
-	 require '../RedisMaster.php';
-	 $rediskeyuser = $_GET['key'];
-	 $publisher_id = $_GET['publisher_id'];
-	 $allusers = $nredis->executeRaw(['JSON.GET', $rediskeyuser]);
-	// $allusers = $nredis->Get($rediskeyuser);
-	if($allusers){
-      echo $allusers;
+if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
+	
+	$rediskey = "usersdata";
+   if ($nredis->exists($rediskey)) {
+    $jsonData = $nredis->executeRaw(['JSON.GET', $rediskey]);
+    $allusers = json_decode($jsonData, true); // Decode the JSON data
+    echo json_encode($allusers);
      }else{
-	 $query = "SELECT * FROM dev_performo.puser WHERE publisher_id='$publisher_id'"; 
+     $publisher_id = $_GET['publisher_id'];
+	 $query = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'"; 
     $result = pg_query($query); 
     $jsondata = array();
 	while ($row = pg_fetch_array($result)) {
@@ -26,14 +26,13 @@ if ($_GET['token_key']=="@123abcd1366") {
         'name' => $name
     ];
     $jsonData = json_encode($jsondata);
-	response($name,$response_code,$response_desc);
-	//$nredis->Set("usersdata", json_encode($jsondata));
-	$key="usersdata";
+	echo 'Data to be stored in Redis:';
+	var_dump($jsonData);
+	$key = "usersdata";
 	$nredis->executeRaw(['JSON.SET', $key, '.', $jsonData]);
-    
+    //response($name,$response_code,$response_desc);
     }
     
-    //$nredis->flushall();
  }
 }else{
 	response(NULL, NULL, 400,"Invalid Request");

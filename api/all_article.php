@@ -8,29 +8,33 @@ $publisher_id = $_GET['publisher_id'];
 $category_id = $_GET['category_id'];
 
 if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET['category_id'] != '') {
-
-    $rediskeynew = $_GET['key'];
-    $allarticlenew = $nredis->zRevRange($rediskeynew, 0, -1);
-
-    if ($allarticlenew) {
-        $jsonArray = [];
-        foreach ($allarticlenew as $jsonString) {
-            $jsonArray[] = json_decode($jsonString, true);
-        }
-        $jsonResultnew = json_encode($jsonArray);
-        echo $jsonResultnew;
-    } else {
-        // Cache miss, retrieve data from the database
+        $rediskeynew =$publisher_id.'__'.$category_id;
+        if($nredis->exists($rediskeynew)){
+        $allarticlenew = $nredis->zRevRange($rediskeynew, 0, -1);
+            if($allarticlenew){
+               $jsonArray = [];
+                foreach ($allarticlenew as $jsonString) {
+                $jsonArray[] = json_decode($jsonString, true);
+            }
+            $jsonResultnew = json_encode($jsonArray);
+            echo $jsonResultnew;
+            }else{
+            $jsonResultnew = [];
+            echo $jsonResultnew;
+            }  
+       }else{
         $sqlq = "SELECT id FROM dev_performo.publisher_category_mapping WHERE category_id='$category_id' AND publisher_id='$publisher_id'";
         $resultsql = pg_query($sqlq);
-        $rowsql = pg_fetch_array($resultsql);
-        $pub_id = $rowsql['id'];
+        if(pg_num_rows($resultsql)>0){
+        while ($rownew = pg_fetch_array($resultsql)) {
+        $pub_id = $rownew['id'];
         $page_number = $_GET['page_number'];
-        $query = "SELECT * FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id
+        $query = "SELECT dev_performo.article_master.*,dev_performo.publisher_category_mapping.*,dev_performo.article_master.id as articleid FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id
                  WHERE pub_category_id=$pub_id ORDER BY pubdate DESC LIMIT $page_number";
         $result = pg_query($query);
-        //$i = 1;
-        while ($row = pg_fetch_array($result)) {
+        if(pg_num_rows($result)>0){
+           while ($row = pg_fetch_array($result)) {
+        	$id = $row['articleid'];
             $title = $row['title'];
             $pubdate = $row['pubdate'];
             $link = $row['link'];
@@ -43,6 +47,7 @@ if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET
             $response_code = 0;
             $response_desc = 'successful';
             $jsondata = [
+            	'id' => $id,
                 'title' => $title,
                 'pubdate' => $pubdate,
                 'link' => $link,
@@ -52,21 +57,32 @@ if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET
                 'guid' => $guid,
                 'mediaurl' => $mediaurl
             ];
-            response($title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc);
-           // $i++;
+            response($id,$title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc);
             $key =$publisher_id.'__'.$category_id;
             $score = strtotime($pubdate);
             $nredis->zAdd($key,$score, json_encode($jsondata));
-            $ttlInSeconds = 360;
+            $ttlInSeconds = 3600;
             $nredis->expire($key, $ttlInSeconds);
-        }
+            }
+             }else{
+             $emptyArray = array();
+             echo json_encode($emptyArray);
+             die;
+            }
+         }
+     }else{
+         $emptyArray = array();
+             echo json_encode($emptyArray);
+             die;
+     }
+      
     }
 
-} else {
-    response(NULL, NULL, NULL, NULL, NULL, NULL, NULL, 400, "Invalid Request");
+}else {
+    response(NULL,NULL, NULL, NULL, NULL, NULL, NULL, NULL, 400, "Invalid Request");
 }
 
-function response($title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc) {
+function response($id,$title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc) {
     $response['title'] = $title;
     $response['pubdate'] = $pubdate;
     $response['link'] = $link;

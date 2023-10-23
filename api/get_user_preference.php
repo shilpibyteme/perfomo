@@ -4,9 +4,29 @@ require '../vendor/autoload.php';
 $nredis = new Predis\client();
 $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
 include('../database.php');
-$jsondata = array();
+date_default_timezone_set('Asia/Kolkata');
 $category = $_GET['category'];
 $userid = $_GET['userid'];
+
+$log_name =  '[{"category":'.'"'.$category.'"'.',"userid":'.'"'.$userid.'"'.'}]';
+$createdate = date('Y-m-d H:i:s');
+
+if (!empty($article_id)) {
+        $sqldataque = "SELECT name FROM dev_performo.puser WHERE id='$userid'";
+        $resultsqu = pg_query_params($db, $sqldataque, array($article_id));
+        if ($resultsqu) {
+            $rowque = pg_fetch_array($resultsqu);
+            if ($rowque) {
+                $username = $rowque['name'];
+                // Prepare and execute the second query
+                $sqlquery = "INSERT INTO dev_performo.userlog (log_name, username, created) VALUES ($1, $2, $3)";
+                $resultsql = pg_query_params($db, $sqlquery, array($log_name, $username, $createdate));
+            }
+        }
+   
+}
+$jsondata = array();
+
 if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) {
 
 	 $rediskey = $category.'__'.$userid;
@@ -32,7 +52,7 @@ if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) 
         'publisher_name' => $publisher_name,
       ];
       $key =$category.'__'.$userid;
-      $score = rand(10,1000000);
+      //$score = rand(10,1000000);
      $nredis->zAdd($key,$score, json_encode($jsondata));
      $ttlInSeconds = 3600;
      $nredis->expire($key, $ttlInSeconds);

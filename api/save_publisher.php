@@ -8,6 +8,19 @@ $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360)
  $category = $_GET['category'];
  $sources = $_GET['sources'];
  $newsource = trim($sources);
+ date_default_timezone_set('Asia/Kolkata');
+$jsondata = array();
+$publisher_id = $_GET['publisher_id'];
+$category_id = $_GET['category_id'];
+$log_name = '[{"userid":'.'"'.$userid.'"'.',"category":'.'"'.$category.'"'.'}]';
+$createdate = date('Y-m-d H:i:s');
+$sqldataque = "SELECT name FROM dev_performo.puser WHERE id='$userid'";
+$resultsqu = pg_query($sqldataque);
+$rowque = pg_fetch_array($resultsqu);
+$username=$rowque['name'];
+
+$sqlquery ="INSERT INTO dev_performo.userlog (log_name,username, created) VALUES ('$log_name','$username','$createdate')";
+$resultsql = pg_query($sqlquery);
 if ($_GET['token_key']=="@123abcd1366") {
 	include('../database.php');
    $sqlq = "SELECT category,user_id FROM dev_performo.user_preferences WHERE category='$category' AND user_id='$userid'";

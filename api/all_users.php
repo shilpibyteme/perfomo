@@ -6,6 +6,16 @@ $nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360)
 include('../database.php');
 require '../RedisMaster.php';
 
+date_default_timezone_set('Asia/Kolkata');
+$publisher_id = $_GET['publisher_id'];
+$log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.'}]';
+$createdate = date('Y-m-d H:i:s');
+$sqldataque = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'";
+$resultsqu = pg_query($sqldataque);
+$rowque = pg_fetch_array($resultsqu);
+$username=$rowque['name'];
+$sqlquery ="INSERT INTO dev_performo.userlog (log_name,username, created) VALUES ('$log_name','$username','$createdate')"; 
+$resultsql = pg_query($sqlquery);
 if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
 	
 	$rediskey = "usersdata";
@@ -14,7 +24,7 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
     $allusers = json_decode($jsonData, true); // Decode the JSON data
     echo json_encode($allusers);
      }else{
-     $publisher_id = $_GET['publisher_id'];
+    
 	 $query = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'"; 
     $result = pg_query($query); 
     $jsondata = array();
@@ -25,9 +35,8 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
 	$jsondata[] = [
         'name' => $name
     ];
-    $jsonData = json_encode($jsondata);
-	echo 'Data to be stored in Redis:';
-	var_dump($jsonData);
+     $jsonData = json_encode($jsondata);
+	// /var_dump($jsonData);
 	$key = "usersdata";
 	$nredis->executeRaw(['JSON.SET', $key, '.', $jsonData]);
     //response($name,$response_code,$response_desc);

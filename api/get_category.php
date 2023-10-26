@@ -1,9 +1,10 @@
 <?php
 header("Content-Type:application/json");
-require '../vendor/autoload.php';
-$nredis = new Predis\client();
-$nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
 include('../database.php');
+require '../RedisMaster.php';
+require './query.php';
+$data = new PocModel;
+date_default_timezone_set('Asia/Kolkata');
 if ($_GET['token_key']=="@123abcd1366") {
 	
 	  $rediskeynew = "categories";
@@ -14,8 +15,7 @@ if ($_GET['token_key']=="@123abcd1366") {
             echo json_encode($jsonArray); // Output each keyword as a separate JSON object
         }
      }else{
-	 $query = 'SELECT DISTINCT(category_name),category_id FROM dev_performo.publisher_category_mapping';
-    $result = pg_query($query); 
+	$result = $data->getcategory(); 
     $jsondata = array();
 	while ($row = pg_fetch_array($result)) {
 	$category_id = $row['category_id'];

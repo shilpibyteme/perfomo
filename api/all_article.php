@@ -1,26 +1,31 @@
 <?php
 header("Content-Type:application/json");
-require '../vendor/autoload.php';
 include('../database.php');
-$nredis = new Predis\Client();
-$nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);
+require './query.php';
+require '../RedisMaster.php';
 date_default_timezone_set('Asia/Kolkata');
+if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET['category_id'] != '') {
 $jsondata = array();
 $publisher_id = $_GET['publisher_id'];
 $category_id = $_GET['category_id'];
 $page_number = $_GET['page_number'];
 $log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category_id.'"'.',"page_number":'.'"'.$page_number.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
-$sqldataque = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'";
-$resultsqu = pg_query($sqldataque);
+
+$user = new PocModel;
+$resultsqu = $user->getuserdata($publisher_id);
 $rowque = pg_fetch_array($resultsqu);
 $username=$rowque['name'];
 
-$sqlquery ="INSERT INTO dev_performo.userlog (log_name,username, created) VALUES ('$log_name','$username','$createdate')";
-$resultsql = pg_query($sqlquery);
+$userdata = [
+        'log_name' =>$log_name,
+        'username' =>$username,
+        'createdate' =>$createdate,
+    ];
+   $result = $user->insertuserlog($userdata);
 
 $queryExecutionTime = 0;
-if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET['category_id'] != '') {
+
     $rediskeynew = $publisher_id . '__' . $category_id;
     if ($nredis->exists($rediskeynew)) {
         $allarticlenew = $nredis->zRevRange($rediskeynew, 0, -1);
@@ -36,8 +41,9 @@ if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET
             echo $jsonResultnew;
         }
     } else {
-        $sqlq = "SELECT id FROM dev_performo.publisher_category_mapping WHERE category_id='$category_id' AND publisher_id='$publisher_id'";
-        $resultsql = pg_query($sqlq);
+
+        $resultsql = $user->getpublishcategeory($category_id,$publisher_id);
+
         if (pg_num_rows($resultsql) > 0) {
             while ($rownew = pg_fetch_array($resultsql)) {
                 $pub_id = $rownew['id'];
@@ -45,17 +51,12 @@ if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET
 
                 // Record the start time of the SQL query execution
                 $queryStartTime = microtime(true);
-
-                $query = "SELECT dev_performo.article_master.*,dev_performo.publisher_category_mapping.*,dev_performo.article_master.id as articleid FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id WHERE pub_category_id=$pub_id ORDER BY pubdate DESC LIMIT $page_number";
-
-                $result = pg_query($query);
+               
+                $result = $user->getarticlemasterdata($pub_id,$page_number);
 
                 // Calculate the query execution time
                 $queryEndTime = microtime(true);
                 $queryExecutionTime = $queryEndTime - $queryStartTime;
-
-                // Output the execution time (for testing purposes)
-                
 
                 if (pg_num_rows($result) > 0) {
                     while ($row = pg_fetch_array($result)) {

@@ -1,34 +1,31 @@
 <?php
 header("Content-Type:application/json");
-require '../vendor/autoload.php';
-$nredis = new Predis\client();
-$nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
 include('../database.php');
+require '../RedisMaster.php';
+require './query.php';
+ $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
 $category = $_GET['category'];
 $userid = $_GET['userid'];
-
+if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) {
 $log_name =  '[{"category":'.'"'.$category.'"'.',"userid":'.'"'.$userid.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
-
 if (!empty($article_id)) {
-        $sqldataque = "SELECT name FROM dev_performo.puser WHERE id='$userid'";
-        $resultsqu = pg_query_params($db, $sqldataque, array($article_id));
-        if ($resultsqu) {
-            $rowque = pg_fetch_array($resultsqu);
-            if ($rowque) {
-                $username = $rowque['name'];
-                // Prepare and execute the second query
-                $sqlquery = "INSERT INTO dev_performo.userlog (log_name, username, created) VALUES ($1, $2, $3)";
-                $resultsql = pg_query_params($db, $sqlquery, array($log_name, $username, $createdate));
-            }
-        }
-   
+        // Prepare and execute the first query
+        
+      
+       $resultsqu = $data->getarticleuser($article_id);
+       $rowque = pg_fetch_array($resultsqu);
+            $username=$rowque['name'];
+                $userdata = [
+                    'log_name' =>$log_name,
+                    'username' =>$username,
+                    'createdate' =>$createdate,
+                     ];
+                $sqlquery = $data->insertuserlog($userdata);
+ 
 }
-$jsondata = array();
-
-if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) {
-
+      $jsondata = array();
 	 $rediskey = $category.'__'.$userid;
 	 if($nredis->exists($rediskey)){
 	  $allarticlekey = $nredis->zRevRange($rediskey, 0, -1);
@@ -37,8 +34,7 @@ if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) 
             echo json_encode($jsonArray); // Output each keyword as a separate JSON object
         }
     }else{
-	$query = "SELECT * FROM dev_performo.user_preferences WHERE category='$category' AND user_id=$userid";
-    $result = pg_query($query);    
+	$result = $data->getpreferencedata($category,$userid);
     if(pg_num_rows($result)>0){
 	while ($row = pg_fetch_array($result)) {
 	$category = $row['category'];
@@ -52,7 +48,8 @@ if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) 
         'publisher_name' => $publisher_name,
       ];
       $key =$category.'__'.$userid;
-      //$score = rand(10,1000000);
+
+      $score = rand(10,1000000);
      $nredis->zAdd($key,$score, json_encode($jsondata));
      $ttlInSeconds = 3600;
      $nredis->expire($key, $ttlInSeconds);

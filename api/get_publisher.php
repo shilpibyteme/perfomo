@@ -3,7 +3,9 @@
  ini_set("display_errors", 1);
 header("Content-Type:application/json");
 include('../database.php');
-include('../RedisMaster.php');
+require '../RedisMaster.php';
+require './query.php';
+ $data= new PocModel;
 $jsonpublisher=array();
 if ($_GET['token_key']=="@123abcd1366") {
 
@@ -16,8 +18,7 @@ if ($_GET['token_key']=="@123abcd1366") {
             echo json_encode($jsonArray); // Output each keyword as a separate JSON object
         }
      }else{
-	 $querypub = 'SELECT DISTINCT(publisher_name),publisher_id,publisher_salt FROM dev_performo.publisher_category_mapping';
-    $resultpub = pg_query($querypub); 
+     $resultpub = $data->getpublisher();
 	while ($row = pg_fetch_array($resultpub)) {
 	$publisher_id = $row['publisher_id'];
 	$publisher_name = $row['publisher_name'];

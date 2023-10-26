@@ -1,22 +1,25 @@
 <?php
 header("Content-Type:application/json");
-require '../vendor/autoload.php';
-$nredis = new Predis\client();
-$nredis->connect('redis-11360.c264.ap-south-1-1.ec2.cloud.redislabs.com', 11360);   
 include('../database.php');
 require '../RedisMaster.php';
-
+require './query.php';
+$data = new PocModel;
 date_default_timezone_set('Asia/Kolkata');
+if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
 $publisher_id = $_GET['publisher_id'];
 $log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
-$sqldataque = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'";
-$resultsqu = pg_query($sqldataque);
+$resultsqu = $data->getuserdata($publisher_id);
 $rowque = pg_fetch_array($resultsqu);
 $username=$rowque['name'];
-$sqlquery ="INSERT INTO dev_performo.userlog (log_name,username, created) VALUES ('$log_name','$username','$createdate')"; 
-$resultsql = pg_query($sqlquery);
-if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
+$userdata = [
+        'log_name' =>$log_name,
+        'username' =>$username,
+        'createdate' =>$createdate,
+    ];
+   $result = $data->insertuserlog($userdata);
+
+
 	
 	$rediskey = "usersdata";
    if ($nredis->exists($rediskey)) {
@@ -24,12 +27,10 @@ if ($_GET['token_key']=="@123abcd1366" && $_GET['publisher_id']) {
     $allusers = json_decode($jsonData, true); // Decode the JSON data
     echo json_encode($allusers);
      }else{
-    
-	 $query = "SELECT name FROM dev_performo.puser WHERE publisher_id='$publisher_id'"; 
-    $result = pg_query($query); 
+	 $results =  $data->getuserdata($publisher_id); 
     $jsondata = array();
-	while ($row = pg_fetch_array($result)) {
-	$name = $row['name'];
+	while ($rows = pg_fetch_array($results)) {
+	$name = $rows['name'];
 	$response_code = 0;
 	$response_desc = 'successful';
 	$jsondata[] = [

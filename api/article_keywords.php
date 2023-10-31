@@ -17,6 +17,7 @@ if (!empty($article_id)) {
         
       
        $resultsqu = $data->getarticleuser($article_id);
+       
        $rowque = pg_fetch_array($resultsqu);
             $username=$rowque['name'];
                 $userdata = [

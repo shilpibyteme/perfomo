@@ -8,21 +8,23 @@ if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET
 $jsondata = array();
 $publisher_id = $_GET['publisher_id'];
 $category_id = $_GET['category_id'];
-$page_number = $_GET['page_number'];
-$log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category_id.'"'.',"page_number":'.'"'.$page_number.'"'.'}]';
+$log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 
 $user = new PocModel;
 $resultsqu = $user->getuserdata($publisher_id);
+if (pg_num_rows($resultsqu) > 0) {
 $rowque = pg_fetch_array($resultsqu);
-$username=$rowque['name'];
 
+$username=$rowque['name'];
 $userdata = [
         'log_name' =>$log_name,
         'username' =>$username,
         'createdate' =>$createdate,
     ];
+
    $result = $user->insertuserlog($userdata);
+}
 
 $queryExecutionTime = 0;
 
@@ -45,14 +47,18 @@ $queryExecutionTime = 0;
         $resultsql = $user->getpublishcategeory($category_id,$publisher_id);
 
         if (pg_num_rows($resultsql) > 0) {
-            while ($rownew = pg_fetch_array($resultsql)) {
-                $pub_id = $rownew['id'];
-                
+            $items = array(); // Initialize an empty array
 
+                while ($rownew = pg_fetch_array($resultsql)) {
+                    $pub_id = $rownew['id'];
+                    $items[] = $pub_id;
+                }
+
+                $datapubid = implode(',', $items);
                 // Record the start time of the SQL query execution
                 $queryStartTime = microtime(true);
                
-                $result = $user->getarticlemasterdata($pub_id,$page_number);
+                $result = $user->getarticlemasterdata($datapubid);
 
                 // Calculate the query execution time
                 $queryEndTime = microtime(true);
@@ -95,7 +101,7 @@ $queryExecutionTime = 0;
                     echo json_encode($emptyArray);
                     die;
                 }
-            }
+          
         } else {
             $emptyArray = array();
             echo json_encode($emptyArray);

@@ -13,6 +13,7 @@ $log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$cat
 $createdate = date('Y-m-d H:i:s');
 $data = new PocModel;
 $resultsqu = $data->getuserdata($publisher_id);
+if (pg_num_rows($resultsqu) > 0) {
 $rowque = pg_fetch_array($resultsqu);
 $username=$rowque['name'];
 
@@ -22,14 +23,14 @@ $userdata = [
         'createdate' =>$createdate,
     ];
      $result = $data->insertuserlog($userdata);
-
+}
      $jsondata = array();
 	   $resulthours = $data->getarticlehours($category_id,$publisher_id);
      if (pg_num_rows($resulthours) > 0) {
-	    while ($row = pg_fetch_array($resulthour)) {
+	    while ($row = pg_fetch_array($resulthours)) {
        $article_id=$row['articleid'];
 
-	     $resultnew = $data->getarticlemapping($article_id);
+	    $resultnew = $data->getarticlemapping($article_id);
        if(pg_num_rows($resultnew)>0){
        $rownew = pg_fetch_array($resultnew);
        $keyword_name = $rownew['keyword_name'];
@@ -60,22 +61,16 @@ $userdata = [
 			    
 			    }
 	    }else{
-	       $link= $row['link'];
+	       $link= $row['link']; 
 	       $keyword = get_meta_tags($link);
 	       $keywordname = explode(',', $keyword['keywords']);
            foreach($keywordname as $vkey){
 	       $keywordfirstseendate = date('Y-m-d H:i:s');
 		   	 $keywordlastseendate = 'NULL';
 		     $flag=1;
-		     $keyworddata = [
-        				'article_id' =>$article_id,
-        				'keyword_name' =>$keyword_name,
-        				'keywordfirstseendate' =>$keywordfirstseendate,
-        				'keywordlastseendate' =>$keywordlastseendate,
-        				'status' =>$flag,
-
-   						 ];
-   				$result = $data->insertkeyword($keyworddata);	  
+		    $query2 ="INSERT INTO dev_performo.article_keyword_mapping (article_id, keyword_name, keywordfirstseendate,keywordlastseendate,status)
+				VALUES ('$article_id', '$vkey','$keywordfirstseendate',$keywordlastseendate,$flag)"; 
+				$result = pg_query($query2);	  
 		   }
 	    }
 	    

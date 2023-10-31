@@ -16,6 +16,7 @@ if (!empty($article_id)) {
         
       
        $resultsqu = $data->getarticleuser($article_id);
+        if (pg_num_rows($resultsqu) > 0) {
        $rowque = pg_fetch_array($resultsqu);
             $username=$rowque['name'];
                 $userdata = [
@@ -24,6 +25,11 @@ if (!empty($article_id)) {
                     'createdate' =>$createdate,
                      ];
                 $sqlquery = $data->insertuserlog($userdata);
+                } else {
+            $emptyArray = array();
+            echo json_encode($emptyArray);
+            die;
+        }
  
 }
 $jsondata = array();

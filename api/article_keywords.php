@@ -1,23 +1,32 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
  $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
-if ($_GET['token_key']=="@123abcd1366") {
- 
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
 
-$article_id = isset($_GET['article_id']) ? $_GET['article_id'] : '';
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+
+$article_id = $_REQUEST['article_id'];
 $log_name =  '[{"article_id":'.'"'.$article_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 
-if (!empty($article_id)) {
-        // Prepare and execute the first query
-        
-      
        $resultsqu = $data->getarticleuser($article_id);
-       
+	     if(pg_num_rows($resultsqu)>0){
        $rowque = pg_fetch_array($resultsqu);
             $username=$rowque['name'];
                 $userdata = [
@@ -26,9 +35,9 @@ if (!empty($article_id)) {
                     'createdate' =>$createdate,
                      ];
                 $sqlquery = $data->insertuserlog($userdata);
- 
-}
-$jsondata = array();
+		 }
+
+     $jsondata = array();
 	 $rediskey = 'metadata__'.$article_id;
      if($nredis->exists($rediskey)){
      $allarticlekey = $nredis->hGetAll($rediskey);
@@ -50,7 +59,7 @@ $jsondata = array();
 	 $response_desc = 'successful';
       //$score = strtotime($keywordfirstseendate);
     // $nredis->zAdd($key,$score, json_encode($jsondata));
-    $key = 'metadata__' . $article_id;
+    $key = 'metadata__'.$article_id;
 	$nredis->hSet($key, $keyword_name, json_encode([
 	    'keyword_name' => $keyword_name,
 	    'keywordfirstseendate' => $keywordfirstseendate,
@@ -58,7 +67,7 @@ $jsondata = array();
 	]));
      $ttlInSeconds = 3600;
      $nredis->expire($key, $ttlInSeconds);
-	//response($keyword_name,$keywordfirstseendate,$keywordlastseendate,$response_code,$response_desc);
+	response($keyword_name,$keywordfirstseendate,$keywordlastseendate,$response_code,$response_desc);
     }
   }else{
          $emptyArray = array();
@@ -66,10 +75,8 @@ $jsondata = array();
              die;
      }
  }
-}else{
-	response(NULL, NULL, 400,"Invalid Request");
-	}
-
+ }
+}
 function response($keyword_name,$keywordfirstseendate,$keywordlastseendate,$response_code,$response_desc){
 	$response['keyword_name'] = $keyword_name;
 	$response['keywordfirstseendate'] = $keywordfirstseendate;

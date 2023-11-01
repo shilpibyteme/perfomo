@@ -2,12 +2,26 @@
  error_reporting(E_ALL);
  ini_set("display_errors", 1);
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
  $data= new PocModel;
 $jsonpublisher=array();
-if ($_GET['token_key']=="@123abcd1366") {
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
 
 	      $rediskeynew = "publishers";
        
@@ -40,8 +54,7 @@ if ($_GET['token_key']=="@123abcd1366") {
       $nredis->expire($key, $ttlInSeconds);
    
  }
-}else{
-	response(NULL,NULL, NULL, 400,"Invalid Request");
+}
 	}
 
 function response($publisher_id,$publisher_name,$publisher_salt,$response_code,$response_desc){

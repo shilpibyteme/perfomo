@@ -1,13 +1,27 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
  $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
-if ($_GET['token_key']=="@123abcd1366") {
-$date_from = isset($_GET['date_from']) ? $_GET['date_from'] : '';
-$date_to = isset($_GET['date_to']) ? $_GET['date_to'] : '';
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+$date_from = isset($_REQUEST['date_from']) ? $_REQUEST['date_from'] : '';
+$date_to = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
 $log_name = '[{"date_from":'.'"'.$date_from.'"'.',"date_to":'.'"'.$date_to.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 $jsondata = array();
@@ -45,8 +59,7 @@ $jsondata = array();
              die;
      }
  }
-}else{
-    response(NULL, NULL, 400,"Invalid Request");
+}
     }
 
 function response($topkeycount,$response_code,$response_desc){

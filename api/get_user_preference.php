@@ -1,13 +1,28 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
  $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
-$category = $_GET['category'];
-$userid = $_GET['userid'];
-if ($_GET['token_key']=="@123abcd1366" && !empty($category) && !empty($userid)) {
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+$category = $_REQUEST['category'];
+$userid = $_REQUEST['userid'];
+if(!empty($category) && !empty($userid)) {
 $log_name =  '[{"category":'.'"'.$category.'"'.',"userid":'.'"'.$userid.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 if (!empty($article_id)) {
@@ -63,9 +78,10 @@ if (!empty($article_id)) {
  }
 
 }else{
-	response(NULL, NULL,NULL, 400,"Invalid Request");
+	response(NULL, NULL,NULL,NULL, 400,"Invalid Request");
 	}
-
+ }
+}
 function response($category,$user_id,$publisher_name,$response_code,$response_desc){
 	$response['category'] = $category;
 	$response['user_id'] = $user_id;

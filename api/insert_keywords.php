@@ -4,11 +4,24 @@ include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
 $data = new PocModel;
-if ($_GET['token_key']=="@123abcd1366") {
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
 date_default_timezone_set('Asia/Kolkata');
 $jsondata = array();
-$publisher_id = $_GET['publisher_id'];
-$category_id = $_GET['category_id'];
+/*
+$publisher_id = $_POST['publisher_id'];
+$category_id = $_POST['category_id'];
 $log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 $data = new PocModel;
@@ -24,8 +37,9 @@ $userdata = [
     ];
      $result = $data->insertuserlog($userdata);
 }
+*/
      $jsondata = array();
-	   $resulthours = $data->getarticlehours($category_id,$publisher_id);
+	   $resulthours = $data->getarticlehours();
      if (pg_num_rows($resulthours) > 0) {
 	    while ($row = pg_fetch_array($resulthours)) {
        $article_id=$row['articleid'];
@@ -105,5 +119,6 @@ $userdata = [
            echo json_encode($emptyArray);
            die;
       }
-    }	   
+    }	
+}	
 ?>

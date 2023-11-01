@@ -1,17 +1,36 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require './query.php';
 require '../RedisMaster.php';
 date_default_timezone_set('Asia/Kolkata');
-if ($_GET['token_key'] == "@123abcd1366" && $_GET['publisher_id'] != '' && $_GET['category_id'] != '') {
+
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+
+$publisher_id = $_REQUEST['publisher_id'];
+$category_id = $_REQUEST['category_id'];
+$page_num = $_REQUEST['page_num'];
+if (isset($_REQUEST['publisher_id']) && $_REQUEST['publisher_id'] != '' && isset($_REQUEST['category_id']) && $_REQUEST['category_id'] != '') {
 $jsondata = array();
-$publisher_id = $_GET['publisher_id'];
-$category_id = $_GET['category_id'];
+
 $log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
-
 $user = new PocModel;
+if(isset($publisher_id)){
 $resultsqu = $user->getuserdata($publisher_id);
 if (pg_num_rows($resultsqu) > 0) {
 $rowque = pg_fetch_array($resultsqu);
@@ -25,12 +44,14 @@ $userdata = [
 
    $result = $user->insertuserlog($userdata);
 }
-
+}
 $queryExecutionTime = 0;
 
     $rediskeynew = $publisher_id . '__' . $category_id;
+	$offset = $page_num - 10;
+	$limit =  $page_num - 1;
     if ($nredis->exists($rediskeynew)) {
-        $allarticlenew = $nredis->zRevRange($rediskeynew, 0, -1);
+        $allarticlenew = $nredis->zRange($rediskeynew, $offset, $limit);
         if ($allarticlenew) {
             $jsonArray = [];
             foreach ($allarticlenew as $jsonString) {
@@ -89,7 +110,7 @@ $queryExecutionTime = 0;
                             'guid' => $guid,
                             'mediaurl' => $mediaurl
                         ];
-                        response($id, $title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc);
+                        response($id, $title, $pubdate, $link, $category, $publisher, $author, $guid, $summary, $mediaurl, $response_code, $response_desc);
                         $key = $publisher_id . '__' . $category_id;
                         $score = strtotime($pubdate);
                         $nredis->zAdd($key, $score, json_encode($jsondata));
@@ -108,11 +129,12 @@ $queryExecutionTime = 0;
             die;
         }
     }
-} else {
-    response(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 400, "Invalid Request");
+	} else {
+		response(NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 400, "Invalid Request");
+	}
+ }
 }
-
-function response($id, $title, $pubdate, $link, $category, $publisher, $author, $guid, $mediaurl, $response_code, $response_desc)
+function response($id, $title, $pubdate, $link, $category, $publisher, $author, $guid, $summary, $mediaurl, $response_code, $response_desc)
 {
     $response['title'] = $title;
     $response['pubdate'] = $pubdate;

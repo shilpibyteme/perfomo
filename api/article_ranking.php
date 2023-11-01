@@ -1,22 +1,32 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 require './query.php';
 include('../database.php');
 require '../RedisMaster.php';
 $data = new PocModel;
 date_default_timezone_set('Asia/Kolkata');
-if ($_GET['token_key']=="@123abcd1366") {
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
 
-$article_id = isset($_GET['article_id']) ? $_GET['article_id'] : '';
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+
+$article_id = $_REQUEST['article_id'];
 $log_name =  '[{"article_id":'.'"'.$article_id.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
- $data= new PocModel;
-if (!empty($article_id)) {
-        // Prepare and execute the first query
-        
-      
+$data= new PocModel;
        $resultsqu = $data->getarticleuser($article_id);
-        if (pg_num_rows($resultsqu) > 0) {
+	     if(pg_num_rows($resultsqu)>0){
        $rowque = pg_fetch_array($resultsqu);
             $username=$rowque['name'];
                 $userdata = [
@@ -25,17 +35,9 @@ if (!empty($article_id)) {
                     'createdate' =>$createdate,
                      ];
                 $sqlquery = $data->insertuserlog($userdata);
-                } else {
-            $emptyArray = array();
-            echo json_encode($emptyArray);
-            die;
-        }
- 
-}
-$jsondata = array();
-$article_id = $_GET['article_id'];
+		 }
 
-	include('../database.php');
+     $jsondata = array();
 	 $rediskeyrank ='ranking__'.$article_id;
     if($nredis->exists($rediskeyrank)){
 	 $allarticlrank = $nredis->zRevRange($rediskeyrank, 0, -1);
@@ -69,9 +71,8 @@ $article_id = $_GET['article_id'];
              die;
             } 
  }
-}else{
-	response(NULL, NULL, 400,"Invalid Request");
-	}
+}
+}
 
 function response($rank,$rank_datetime,$response_code,$response_desc){
 	$response['rank'] = $rank;

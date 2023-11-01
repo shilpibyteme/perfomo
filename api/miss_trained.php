@@ -28,11 +28,10 @@ if (!empty($publisher_id)) {
                     'createdate' =>$createdate,
                      ];
                 $sqlquery = $data->insertuserlog($userdata);
-    }
- 
+	   }
 }
 $jsondata = array();
-     $rediskey = 'missed_train'.$publisher_id.'__'.$date_from.'__'.$date_to;
+     $rediskey ='missed_train__'.$publisher_id.'__'.$date_from.'__'.$date_to;
      if ($nredis->exists($rediskey)) {
         $allarticlenew = $nredis->zRevRange($rediskey, 0, -1);
         if ($allarticlenew) {
@@ -48,36 +47,38 @@ $jsondata = array();
         }
     }else{
 
-    $resultnew = $data->getlmissedtarin($date_from,$date_to,$publisher_id);     
-    if(pg_num_rows($resultnew)>0){
-        while ($resultss = pg_fetch_array($resultnew)) {
-        $rank = $resultss['rank'];
-        $publisher_name = $resultss['publisher_name'];
-        $keyword_name = $resultss['keyword_name'];
+    $results = $data->getlmissedtarin($date_from,$date_to);     
+    if(pg_num_rows($results)>0){
+        while ($resultkey = pg_fetch_array($results)) {
+            $publisherid = $resultkey['publisher_id'];
+        if($publisherid == $publisher_id && !empty($resultkey['keyword_name'])){
+			$publishername = $resultkey['publisher_name'];
+		   $rank = $resultkey['rank'];
+           $keyword_name = $resultkey['keyword_name']; 
+           $pubdate = $resultkey['pubdate']; 
            $response_code = 0;
            $response_desc = 'successful';
-           $jsondata = [
-            'legard_keyword_name' => $keyword_name,
-            'rank'=>$rank,
-            'publisher_name'=>$publisher_name,
-        ];
-            //$score = strtotime($keywordfirstseendate);
-          // $nredis->zAdd($key,$score, json_encode($jsondata));
-          $key = 'missed_train_'.$publisher_id.'__'.$date_from.'__'.$date_to;
-          $score = $rank;
-          $nredis->zAdd($key, $score, json_encode($jsondata));
-          $ttlInSeconds = 3600;
-          $nredis->expire($key, $ttlInSeconds);
-         /* $nredis->hSet($key, $i, json_encode([
-              'legard_keyword_name' => $keyword_name,
+           $score = strtotime($pubdate);
+          $key = 'missed_train__'.$publisher_id.'__'.$date_from.'__'.$date_to;
+          $jsondata = [
+              'missed_train' => $keyword_name,
               'rank'=>$rank,
-              'publisher_name'=>$publisher_name,
-          ]));
-*/
-          response($keyword_name,$response_code,$response_desc);
-        }
+              'publisher_name'=>$publishername,
+              'publisher_id'=>$publisherid,
+        ];
+       
+       $nredis->zAdd($key, $score, json_encode($jsondata));
+       $ttlInSeconds = 3600;
+       $nredis->expire($key, $ttlInSeconds);
+       response($keyword_name,$rank,$publishername,$publisherid,$response_code,$response_desc);
+    }else{
+        $emptyArray = array();
+            echo json_encode($emptyArray);
+            die;
+    }
+       }
      }else{
-         $emptyArray = array('Missed Train keyword');
+         $emptyArray = array();
              echo json_encode($emptyArray);
              die;
      }
@@ -86,8 +87,11 @@ $jsondata = array();
     response(NULL, NULL, 400,"Invalid Request");
     }
 
-function response($keyword_name,$response_code,$response_desc){
+function response($keyword_name,$rank,$publishername,$publisherid,$response_code,$response_desc){
     $response['keyword_name'] = $keyword_name;
+    $response['rank'] = $rank;
+    $response['publishername'] = $publishername;
+    $response['publisherid'] = $publisherid;
     $response['response_code'] = $response_code;
     $response['response_desc'] = $response_desc;
     $json_response = json_encode($response);

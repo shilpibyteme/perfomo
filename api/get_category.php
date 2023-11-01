@@ -1,12 +1,25 @@
 <?php
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
 $data = new PocModel;
 date_default_timezone_set('Asia/Kolkata');
-if ($_GET['token_key']=="@123abcd1366") {
-	
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
 	  $rediskeynew = "categories";
 	  if($nredis->exists($rediskeynew)){
  				$allcat = $nredis->zRevRange($rediskeynew, 0, -1);
@@ -38,10 +51,9 @@ if ($_GET['token_key']=="@123abcd1366") {
       $ttlInSeconds = 3600;
       $nredis->expire($key, $ttlInSeconds);
     
+  }
  }
-}else{
-	response(NULL,NULL,400,"Invalid Request");
-	}
+}
 
 function response($category_id, $category_name,$response_code,$response_desc){
 	$response['category_id'] = $category_id;

@@ -54,13 +54,10 @@ class PocModel
     }
     public function getkeyword($article_id)
     {
-        $querart = "SELECT * FROM dev_performo.article_keyword_mapping WHERE article_id='$article_id'";
+      echo  $querart = "SELECT * FROM dev_performo.article_keyword_mapping WHERE article_id='$article_id'";
         $resultart = pg_query($querart); 
-       if(pg_num_rows($resultart)>0){
         return $resultart; 
-        }else{
-            return false;
-        }
+        die;
 
     }
     public function getranking($article_id)
@@ -113,9 +110,9 @@ class PocModel
        
 
     }
-    public function getarticlehours($category_id,$publisher_id)
+    public function getarticlehours()
     {
-     $querys = "SELECT dev_performo.article_master.id as articleid,dev_performo.article_master.link as link FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON CAST(dev_performo.publisher_category_mapping.id AS integer) = dev_performo.article_master.pub_category_id WHERE category_id = '$category_id' AND publisher_id = '$publisher_id' AND pubdate > NOW() - INTERVAL '5 HOURS' ORDER BY pubdate DESC"; 
+    echo $querys = "SELECT dev_performo.article_master.id as articleid,dev_performo.article_master.link as link FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON CAST(dev_performo.publisher_category_mapping.id AS integer) = dev_performo.article_master.pub_category_id WHERE  pubdate > NOW() - INTERVAL '5 HOURS' ORDER BY pubdate DESC"; 
         $resulthours = pg_query($querys);  
         return $resulthours; 
         
@@ -200,22 +197,17 @@ class PocModel
   public function getuseraccordingcat($category)
     {
           $q = "SELECT name FROM dev_performo.puser JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.publisher_id=dev_performo.puser.publisher_id JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE dev_performo.publisher_category_mapping.category_id='$category'";
-                $resultqq= pg_query($q); 
-        if(pg_num_rows($resultqq)>0){
+         $resultqq= pg_query($q); 
         return $resultqq; 
-        }else{
-            return false;
-        }
+        
     }
     public function getsearchkeyword($category,$publisher_id,$keywords)
     {
-       $sqlq = "SELECT article_id FROM dev_performo.article_keyword_mapping JOIN dev_performo.article_master ON dev_performo.article_keyword_mapping.article_id=dev_performo.article_master.id JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE  dev_performo.publisher_category_mapping.category_id ='$category' AND dev_performo.publisher_category_mapping.publisher_id ='$publisher_id' AND dev_performo.article_keyword_mapping.keyword_name LIKE '%$keywords%'";
+      echo $sqlq = "SELECT article_id FROM dev_performo.article_keyword_mapping JOIN dev_performo.article_master ON dev_performo.article_keyword_mapping.article_id=dev_performo.article_master.id JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE  dev_performo.publisher_category_mapping.category_id ='$category' AND dev_performo.publisher_category_mapping.publisher_id ='$publisher_id' AND dev_performo.article_keyword_mapping.keyword_name LIKE '%$keywords%'";
         $resultsql = pg_query($sqlq);
-        if(pg_num_rows($resultsql)>0){
+   
         return $resultsql; 
-        }else{
-            return false;
-        }
+        
     }
      public function getsearchactricle($article_id)
     {
@@ -229,7 +221,7 @@ class PocModel
     }
     public function getpostionrankingtime($date_from,$date_to,$publisher_id)
     {
-        $queries = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
+       $queries = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
@@ -242,7 +234,7 @@ class PocModel
     }
     public function getpostionranking($date_from,$date_to,$publisher_id)
     {
-        $query1 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
+       $query1 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
@@ -290,19 +282,19 @@ class PocModel
         return $resultnew; 
         
     }
-    public function getlmissedtarin($date_from,$date_to,$publisher_id)
+    public function getlmissedtarin($date_from,$date_to)
     {
-    $querynew = "SELECT * 
+   $querymissed = "SELECT * 
      from (
-     select akm.keyword_name,rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,am.pubdate  
+     select DISTINCT(akm.keyword_name),rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,am.pubdate  
      from dev_performo.article_keyword_mapping akm
      inner join dev_performo.article_master am on am.id = akm.article_id
      inner join dev_performo.publisher_category_mapping pcm on pcm.id = am.pub_category_id
      ) T 
      where pubdate >= '$date_from'
-       and pubdate < '$date_to' AND publisher_id='$publisher_id' ORDER BY pubdate DESC";
-      $resultnew = pg_query($querynew);
-        return $resultnew; 
+       and pubdate < '$date_to'";
+      $resultmissed = pg_query($querymissed);
+        return $resultmissed; 
         
     }
     public function insertsignupdata($datas)
@@ -328,15 +320,15 @@ class PocModel
     }
     public function getuseremail($email)
     {
-       $sqlq = "SELECT id FROM dev_performo.puser WHERE  email='$email'";
+       $sqlq = "SELECT * FROM dev_performo.puser WHERE  email='$email'";
         $resultsql = pg_query($sqlq); 
         return $resultsql; 
         
     }
     public function updatesignup($id,$uppredata)
     {
-        $subscriber = $uppredata['subscriber'];
-       $query2 = "UPDATE dev_performo.puser SET subscriber='$subscriber' WHERE id='$id'";
+        $request = $uppredata['request'];
+       $query2 = "UPDATE dev_performo.puser SET request='$request' WHERE id='$id'";
         $result = pg_query($query2);
 
     }

@@ -1,31 +1,47 @@
 <?php
+ error_reporting(E_ALL);
+ ini_set("display_errors", 1);
 header("Content-Type:application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require './query.php';
 require '../RedisMaster.php';
 $data = new PocModel;
-$category = $_GET['category_id'];
-$publisher_id = $_GET['publisher_id'];
-if ($_GET['token_key']=="@123abcd1366" && $_GET['keywords']!='' && $category!='' && $publisher_id!='') {
+$category = $_REQUEST['category_id'];
+$publisher_id = $_REQUEST['publisher_id'];
+$keywords = $_REQUEST['keywords'];
+$headers = getallheaders();
+if (!array_key_exists('Authorization', $headers)) {
+
+    echo json_encode(["error" => "Authorization header is missing"]);
+    exit;
+}
+else {
+
+    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+
+        echo json_encode(["error" => "Token keyword is missing"]);
+        exit;
+    }else{
+
 $respnseStartTime = microtime(true);
-$keywords = $_GET['keywords'];
+
 $queryExecutionTime = 0;
  $jsondata = array();
-
-
-$log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category.'"'.',"keywords":'.'"'.$keywords.'"'.'}]';
+	$log_name = '[{"publisher_id":'.'"'.$publisher_id.'"'.',"category_id":'.'"'.$category.'"'.',"keywords":'.'"'.$keywords.'"'.'}]';
     $createdate = date('Y-m-d H:i:s');
     $resultqq=$data->getuseraccordingcat($category);
- if(pg_num_rows($resultqq)>0){
-$rowque = pg_fetch_array($resultqq);
-$username=$rowque['name'];
-$userdata = [
-        'log_name' =>$log_name,
-        'username' =>$username,
-        'createdate' =>$createdate,
-    ];
-    $sqlquery = $data->insertuserlog($userdata);
-
+		 if(pg_num_rows($resultqq)>0){
+		$rowque = pg_fetch_array($resultqq);
+		$username=$rowque['name'];
+		$userdata = [
+				'log_name' =>$log_name,
+				'username' =>$username,
+				'createdate' =>$createdate,
+			];
+			$sqlquery = $data->insertuserlog($userdata);
+		 }
 	 $rediskeyatr = '{keyword}:'.$keywords.'__'.$publisher_id.'__'.$category;
 	 $fromcache = false;
 	 $jsondata = array();
@@ -41,7 +57,6 @@ $userdata = [
     $rowsql = pg_fetch_array($resultsql);
     $article_id =$rowsql['article_id'];
     $result = $data->getsearchactricle($article_id);
-     if(pg_num_rows($result)>0){
     $queryEndTime = microtime(true);
     $queryExecutionTime = $queryEndTime - $queryStartTime;
 	  while ($row = pg_fetch_array($result)) {
@@ -76,26 +91,16 @@ $userdata = [
 	  response($id, $title, $pubdate, $link, $categoryname, $publishername, $author, $guid, $mediaurl, $response_code, $response_desc);
 
     }
-    }else{
-   	$emptyArray = array();
-    echo json_encode($emptyArray);
-    die;
+        }else{
+        $emptyArray = array();
+        echo json_encode($emptyArray);
+        die;
+    }
    }
-   }else{
-   	$emptyArray = array();
-    echo json_encode($emptyArray);
-    die;
+
    }
  }
 
-}else{
-	response(NULL, NULL,NULL, NULL,NULL, NULL, NULL, 400,"Invalid Request");
-	}
-}else{
-   	$emptyArray = array();
-    echo json_encode($emptyArray);
-    die;
-   }
 function response($id, $title, $pubdate, $link, $categoryname, $publishername, $author, $guid, $mediaurl, $response_code, $response_desc)
 {
 	$response['title'] = $title;

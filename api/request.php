@@ -34,6 +34,7 @@ else {
 
          $result = $data->updatesignup($id,$uppredata);
        	  echo "data updated!!";
+		  
   }
 }
 

@@ -24,7 +24,8 @@ else {
     }else{
      $email=$_REQUEST['email'];
      if ($email!='') {
-
+         $key ='{access}:'.$email;  
+           $allKeys = $nredis->del($key);  
 	      $rediskeynew ='{access}:'.$email;
        
 		  if($nredis->exists($rediskeynew)){

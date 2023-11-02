@@ -221,28 +221,28 @@ class PocModel
     }
     public function getpostionrankingtime($date_from,$date_to,$publisher_id)
     {
-       $queries = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
+      $queries = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
      WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.publisher_id=$publisher_id
 
         ) group by rank";
-      $result1 = pg_query($queries);
+        $result1 = pg_query($queries);
         return $result1; 
         
     }
     public function getpostionranking($date_from,$date_to,$publisher_id)
     {
-       $query1 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
+       $query3 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
      WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.publisher_id=$publisher_id
 
         ) group by rank;";
-      $result2 = pg_query($query1);
-        return $result2; 
+      $result3 = pg_query($query3);
+        return $result3; 
         
     }
     public function gettopkeyword($date_from,$date_to)

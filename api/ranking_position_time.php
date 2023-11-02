@@ -75,7 +75,11 @@ $jsondata = array();
      $ttlInSeconds = 3600;
      $nredis->expire($key, $ttlInSeconds);
     response($rank_minute,$rank,$response_code,$response_desc);
-}
+}else{
+         $emptyArray = array();
+             echo json_encode($emptyArray);
+             die;
+     }
 
     }
   }else{

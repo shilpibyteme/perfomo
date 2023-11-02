@@ -54,18 +54,15 @@ if (!empty($publisher_id)) {
         echo json_encode($jsonArrayOutput);
 
      }else{
-
-    $results1 = $data->getpostionranking($date_from,$date_to,$publisher_id);    
-  if(pg_num_rows($results1)>0){
-     while ($resultkey = pg_fetch_array($results1)) {
+    $results11 = $data->getpostionranking($date_from,$date_to,$publisher_id);    
+    if(pg_num_rows($results11)>0){
+     while ($resultkey = pg_fetch_array($results11)) {
      $rankcount = $resultkey['count'];
      $rank = $resultkey['rank'];
-     if($rank == 1 || $rank == 2 || $rank == 3){
      $response_code = 0;
      $response_desc = 'successful';
-      //$score = strtotime($keywordfirstseendate);
-    // $nredis->zAdd($key,$score, json_encode($jsondata));
     $key = 'position__' . $publisher_id;
+	if($rank == 1 || $rank == 2 || $rank == 3){
     $nredis->hSet($key, $rank, json_encode([
         'rankcount' => $rankcount,
         'rank' => $rank,
@@ -75,7 +72,11 @@ if (!empty($publisher_id)) {
      $nredis->expire($key, $ttlInSeconds);
 
     response($rankcount,$rank,$response_code,$response_desc);
-      }
+      }else{
+		   $emptyArray = array();
+             echo json_encode($emptyArray);
+             die;
+	  }
     }
   }else{
          $emptyArray = array();

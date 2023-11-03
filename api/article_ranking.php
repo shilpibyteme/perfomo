@@ -2,10 +2,10 @@
 header("Content-Type:application/json");
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
-require './query.php';
 include('../database.php');
 require '../RedisMaster.php';
-$data = new PocModel;
+require './query.php';
+ $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
 $headers = getallheaders();
 if (!array_key_exists('Authorization', $headers)) {

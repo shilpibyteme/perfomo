@@ -34,7 +34,8 @@ else {
 
          $result = $data->updatesignup($id,$uppredata);
        	  echo "data updated!!";
-		  
+		       $key ='{access}:'.$email;  
+           $allKeys = $nredis->del($key);  
   }
 }
 

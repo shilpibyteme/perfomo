@@ -24,10 +24,8 @@ else {
     }else{
         $email=$_REQUEST['email'];
         if ($email!='') {
-         $key ='{access}:'.$email;  
-           $allKeys = $nredis->del($key);  
-	      $rediskeynew ='{access}:'.$email;
-       
+	      $rediskeynew ='{access}:'.$email;   
+          $allKeys = $nredis->del($rediskeynew); 
 		  if($nredis->exists($rediskeynew)){
 			$allarticlenew = $nredis->sRandMember($rediskeynew);
 			echo $allarticlenew;
@@ -36,10 +34,14 @@ else {
      $resultpub = $data->getuseremail($email);
 	while ($row = pg_fetch_array($resultpub)) {
     $subscriber = $row['subscriber'];
+	$id = $row['id'];
+	$publisher_id = $row['publisher_id'];
 	$response_code = 0;
 	$response_desc = 'successful';
 	$jsonpublisher[] = [
         'subscriber' => $subscriber,
+		'userid' => $id,
+		'publisher_id' => $publisher_id,
       ];
     
      
@@ -49,7 +51,7 @@ else {
     //  $nredis->zAdd($key,$score, json_encode($jsonpublisher));
       $ttlInSeconds = 3600;
       $nredis->expire($key, $ttlInSeconds);
-	  response($subscriber,$response_code,$response_desc);
+	  response($subscriber,$id,$publisher_id,$response_code,$response_desc);
 	}
  }
 }else{
@@ -57,8 +59,10 @@ else {
 	}
   }
 }
-function response($subscriber,$response_code,$response_desc){
+function response($subscriber,$id,$publisher_id,$response_code,$response_desc){
     $response['subscriber'] = $subscriber;
+	$response['userid'] = $id;
+	$response['publisher_id'] = $publisher_id;
 	$response['response_code'] = $response_code;
 	$response['response_desc'] = $response_desc;
 	$json_response = json_encode($response);

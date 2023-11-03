@@ -22,8 +22,8 @@ else {
         echo json_encode(["error" => "Token keyword is missing"]);
         exit;
     }else{
-     $email=$_REQUEST['email'];
-     if ($email!='') {
+        $email=$_REQUEST['email'];
+        if ($email!='') {
          $key ='{access}:'.$email;  
            $allKeys = $nredis->del($key);  
 	      $rediskeynew ='{access}:'.$email;

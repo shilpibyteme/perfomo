@@ -21,7 +21,10 @@ else {
         exit;
     }else{
 $date_from = isset($_REQUEST['date_from']) ? $_REQUEST['date_from'] : '';
-$date_to = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
+$dateto = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
+$dateToObj = DateTime::createFromFormat('Y-m-d', $dateto);
+$dateToObj->add(new DateInterval('P1D'));
+$date_to = $dateToObj->format('Y-m-d');
 $log_name = '[{"date_from":'.'"'.$date_from.'"'.',"date_to":'.'"'.$date_to.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 $jsondata = array();

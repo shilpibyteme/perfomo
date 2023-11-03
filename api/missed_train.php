@@ -22,8 +22,12 @@ else {
     }else{
  
 $date_from = isset($_REQUEST['date_from']) ? $_REQUEST['date_from'] : '';
-$date_to = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
+$dateto = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
+$dateToObj = DateTime::createFromFormat('Y-m-d', $dateto);
+$dateToObj->add(new DateInterval('P1D'));
+$date_to = $dateToObj->format('Y-m-d');
 $publisher_id = isset($_REQUEST['publisher_id']) ? $_REQUEST['publisher_id'] : '';
+$category_id = isset($_REQUEST['category_id']) ? $_REQUEST['category_id'] : '';
 $log_name = '[{"date_from":'.'"'.$date_from.'"'.',"date_to":'.'"'.$date_to.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 $jsondata = array();
@@ -43,7 +47,7 @@ $jsondata = array();
         }
     }else{
 
-    $results = $data->getlmissedtarin($date_from,$date_to);     
+    $results = $data->getlmissedtarin($date_from,$date_to,$category_id,$publisher_id);     
     if(pg_num_rows($results)>0){
         while ($resultkey = pg_fetch_array($results)) {
             $publisherid = $resultkey['publisher_id'];

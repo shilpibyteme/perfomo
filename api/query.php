@@ -219,26 +219,26 @@ class PocModel
             return false;
         }
     }
-    public function getpostionrankingtime($date_from,$date_to,$publisher_id)
+    public function getpostionrankingtime($date_from,$date_to,$category_id,$publisher_id)
     {
       $queries = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
-     WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.publisher_id=$publisher_id
+     WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.category_id='$category_id' AND publisher_category_mapping.publisher_id='$publisher_id' 
 
         ) group by rank";
         $result1 = pg_query($queries);
         return $result1; 
         
     }
-    public function getpostionranking($date_from,$date_to,$publisher_id)
+    public function getpostionranking($date_from,$date_to,$category_id,$publisher_id)
     {
-       $query3 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
+      $query3 = "SELECT rank, count(rank) FROM dev_performo.article_ranking 
         where dev_performo.article_ranking.article_id in 
         (
         SELECT article_master.id FROM dev_performo.publisher_category_mapping JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id 
-     WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.publisher_id=$publisher_id
+     WHERE article_master.pubdate >='$date_from' AND article_master.pubdate < '$date_to' AND publisher_category_mapping.category_id='$category_id' AND publisher_category_mapping.publisher_id='$publisher_id' 
 
         ) group by rank;";
       $result3 = pg_query($query3);
@@ -252,47 +252,52 @@ class PocModel
         return $result2; 
         
     }
-    public function getearlyoffer($date_from,$date_to,$publisher_id)
+    public function getearlyoffer($date_from,$date_to,$category_id,$publisher_id)
     {
     $query1 = "select * 
      from (
-     select akm.keyword_name,rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,am.pubdate  
+     select akm.keyword_name,rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,pcm.category_id,am.pubdate  
      from dev_performo.article_keyword_mapping akm
      inner join dev_performo.article_master am on am.id = akm.article_id
      inner join dev_performo.publisher_category_mapping pcm on pcm.id = am.pub_category_id
      ) T 
      where pubdate >= '$date_from'
-       and pubdate < '$date_to' AND publisher_id='$publisher_id'  ORDER BY pubdate DESC";
+       and pubdate < '$date_to' AND category_id='$category_id' AND publisher_id='$publisher_id'  ORDER BY pubdate DESC";
       $result2 = pg_query($query1);
         return $result2; 
         
     }
-    public function getlegarddata($date_from,$date_to,$publisher_id)
+    public function getlegarddata($date_from,$date_to,$category_id,$publisher_id)
     {
     $querynew = "SELECT * 
      from (
-     select akm.keyword_name,rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,am.pubdate  
+     select akm.keyword_name,rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,pcm.category_id,am.pubdate  
      from dev_performo.article_keyword_mapping akm
      inner join dev_performo.article_master am on am.id = akm.article_id
      inner join dev_performo.publisher_category_mapping pcm on pcm.id = am.pub_category_id
      ) T 
      where pubdate >= '$date_from'
-       and pubdate < '$date_to' AND publisher_id='$publisher_id' ORDER BY pubdate,rank DESC";
+       and pubdate < '$date_to' 
+	   AND publisher_id='$publisher_id'
+	   AND category_id='$category_id'
+	   ORDER BY pubdate,rank DESC";
       $resultnew = pg_query($querynew);
         return $resultnew; 
         
     }
-    public function getlmissedtarin($date_from,$date_to)
+    public function getlmissedtarin($date_from,$date_to,$category_id,$publisher_id)
     {
    $querymissed = "SELECT * 
      from (
-     select DISTINCT(akm.keyword_name),rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,am.pubdate  
+     select DISTINCT(akm.keyword_name),rank() over(partition by akm.keyword_name order by am.pubdate),pcm.publisher_name,pcm.publisher_id,pcm.category_id,am.pubdate  
      from dev_performo.article_keyword_mapping akm
      inner join dev_performo.article_master am on am.id = akm.article_id
      inner join dev_performo.publisher_category_mapping pcm on pcm.id = am.pub_category_id
      ) T 
      where pubdate >= '$date_from'
-       and pubdate < '$date_to'";
+       and pubdate < '$date_to'
+	   AND publisher_id='$publisher_id'
+	   AND category_id='$category_id'";
       $resultmissed = pg_query($querymissed);
         return $resultmissed; 
         

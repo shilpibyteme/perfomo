@@ -5,6 +5,7 @@ header("Access-Control-Allow-Headers: *");
 include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
+$jsondataran = array();
  $data= new PocModel;
 date_default_timezone_set('Asia/Kolkata');
 $headers = getallheaders();
@@ -37,34 +38,40 @@ $data= new PocModel;
                 $sqlquery = $data->insertuserlog($userdata);
 		 }
 
-     $jsondata = array();
-	 $rediskeyrank ='ranking__'.$article_id;
-    if($nredis->exists($rediskeyrank)){
-	 $allarticlrank = $nredis->zRevRange($rediskeyrank, 0, -1);
-        foreach ($allarticlrank as $jsonString) {
-            $jsonArray = json_decode($jsonString, true);
-            echo json_encode($jsonArray); // Output each keyword as a separate JSON object
+	 $rediskeynew ='ranking__'.$article_id;
+    if ($nredis->exists($rediskeynew)) {
+        $allarticlenew = $nredis->zRevRange($rediskeynew,0,-1);
+        if ($allarticlenew) {
+            $jsonArray = [];
+            foreach ($allarticlenew as $jsonString) {
+                $jsonArray[] = json_decode($jsonString, true);
+            }
+            $jsonResultnew = json_encode($jsonArray);
+            echo $jsonResultnew;
+        } else {
+            $jsonResultnew = [];
+            echo $jsonResultnew;
         }
-     }else{
+    }else{
 	$result = $data->getranking($article_id); 
      if(pg_num_rows($result)>0){
-	while ($row = pg_fetch_array($result)) {
-	$rank = $row['rank'];
-	$rank_datetime = $row['rank_datetime'];
-	$rank_datetime = $row['rank_datetime'];
-	$response_code = 0;
-	$response_desc = 'successful';
-	$jsondata[] = [
-        'rank' => $rank,
-        'rank_datetime' => $rank_datetime,
-    ];
-     $key ='ranking__'.$article_id;
-     $score = strtotime($rank_datetime);
-     $nredis->zAdd($key,$score, json_encode($jsondata));
-     $ttlInSeconds = 3600;
-     $nredis->expire($key, $ttlInSeconds);
-	response($rank,$rank_datetime,$response_code,$response_desc);
-    }
+			while ($rowran = pg_fetch_array($result)) {
+			$rank = $rowran['rank'];
+			$rank_datetime = $rowran['rank_datetime'];
+			$response_code = 0;
+			$response_desc = 'successful';
+			$jsondataran = [
+				'rank' => $rank,
+				'rank_datetime' => $rank_datetime,
+			];
+			
+			 $key ='ranking__'.$article_id;
+			 $score = strtotime($rank_datetime);
+			 $nredis->zAdd($key,$score, json_encode($jsondataran));
+			 $ttlInSeconds = 3600;
+			 $nredis->expire($key, $ttlInSeconds);
+			response($rank,$rank_datetime,$response_code,$response_desc);
+			}
    }else{
              $emptyArray = array();
              echo json_encode($emptyArray);

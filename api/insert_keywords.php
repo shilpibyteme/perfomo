@@ -4,20 +4,6 @@ include('../database.php');
 require '../RedisMaster.php';
 require './query.php';
 $data = new PocModel;
-$headers = getallheaders();
-if (!array_key_exists('Authorization', $headers)) {
-
-    echo json_encode(["error" => "Authorization header is missing"]);
-    exit;
-}
-else {
-
-    if ($headers['Authorization'] !== 'Bearer 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-
-        echo json_encode(["error" => "Token keyword is missing"]);
-        exit;
-    }else{
-date_default_timezone_set('Asia/Kolkata');
 $jsondata = array();
 /*
 $publisher_id = $_POST['publisher_id'];
@@ -119,6 +105,6 @@ $userdata = [
            echo json_encode($emptyArray);
            die;
       }
-    }	
-}	
+    	
+
 ?>

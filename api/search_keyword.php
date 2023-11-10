@@ -42,25 +42,31 @@ $queryExecutionTime = 0;
 			];
 			$sqlquery = $data->insertuserlog($userdata);
 		 }
-	 $rediskeyatr = '{keyword}:'.$keywords.'__'.$publisher_id.'__'.$category;
+	 $rediskeyatr = '{keyword}:'.$keywords;
 	 $fromcache = false;
-	 $jsondata = array();
-	 if($nredis->exists($rediskeyatr)){
-	 $allarticlenew = $nredis->sRandMember($rediskeyatr);
-	 echo $allarticlenew;
-	  $fromcache = true;
+	 $jsondataran = array();
+	 if ($nredis->exists($rediskeyatr)) {
+        $allarticlenew = $nredis->zRevRange($rediskeyatr,0,-1);
+        if ($allarticlenew) {
+            $jsonArray = [];
+            foreach ($allarticlenew as $jsonString) {
+                $jsonArray[] = json_decode($jsonString, true);
+            }
+            $jsonResultnew = json_encode($jsonArray);
+            echo $jsonResultnew;
+        } else {
+            $jsonResultnew = [];
+            echo $jsonResultnew;
+        }
     }else{
 	  
 	   $queryStartTime = microtime(true);
 	$resultsql = $data->getsearchkeyword($category,$publisher_id,$keywords); 
      if(pg_num_rows($resultsql)>0){
-    $rowsql = pg_fetch_array($resultsql);
-    $article_id =$rowsql['article_id'];
-    $result = $data->getsearchactricle($article_id);
     $queryEndTime = microtime(true);
     $queryExecutionTime = $queryEndTime - $queryStartTime;
-	  while ($row = pg_fetch_array($result)) {
-											 $id =$rowsql['article_id'];
+	  while ($row = pg_fetch_array($resultsql)) {
+						$id =$row['article_id'];
                         $title = $row['title'];
                         $pubdate = $row['pubdate'];
                         $link = $row['link'];
@@ -72,7 +78,7 @@ $queryExecutionTime = 0;
                         $mediaurl = $row['mediaurl'];
                         $response_code = 0;
                         $response_desc = 'successful';
-                        $jsondata = [
+                        $jsondataran = [
                             'id' => $id,
                             'title' => $title,
                             'pubdate' => $pubdate,
@@ -83,9 +89,9 @@ $queryExecutionTime = 0;
                             'guid' => $guid,
                             'mediaurl' => $mediaurl
                         ];
-      $key ='{keyword}:'.$keywords.'__'.$publisher_id.'__'.$category;
+      $key ='{keyword}:'.$keywords;
      $score = strtotime($pubdate);
-     $nredis->sAdd($key, json_encode($jsondata));
+	 $nredis->zAdd($key,$score, json_encode($jsondataran));
      $ttlInSeconds = 3600;
      $nredis->expire($key, $ttlInSeconds);
 	  response($id, $title, $pubdate, $link, $categoryname, $publishername, $author, $guid, $mediaurl, $response_code, $response_desc);

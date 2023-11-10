@@ -48,7 +48,7 @@ if (!empty($publisher_id)) {
 	   }
 }
       $jsondata = array();
-     $rediskey = 'legard'.$publisher_id.'__'.$date_from.'__'.$date_to;
+     $rediskey = 'legard'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
      if ($nredis->exists($rediskey)) {
         $allarticlenew = $nredis->zRevRange($rediskey, 0, -1);
         if ($allarticlenew) {
@@ -80,11 +80,11 @@ if (!empty($publisher_id)) {
         ];
             //$score = strtotime($keywordfirstseendate);
           // $nredis->zAdd($key,$score, json_encode($jsondata));
-          $key = 'legard'.$publisher_id.'__'.$date_from.'__'.$date_to;
-          $score = $rank;
-          $nredis->zAdd($key, $score, json_encode($jsondata));
-          $ttlInSeconds = 3600;
-          $nredis->expire($key, $ttlInSeconds);
+          $key = 'legard'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
+         // $score = $rank;
+          //$nredis->zAdd($key, $score, json_encode($jsondata));
+          //$ttlInSeconds = 3600;
+          //$nredis->expire($key, $ttlInSeconds);
          /* $nredis->hSet($key, $i, json_encode([
               'legard_keyword_name' => $keyword_name,
               'rank'=>$rank,

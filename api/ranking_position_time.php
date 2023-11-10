@@ -48,7 +48,7 @@ if (!empty($publisher_id)) {
  
 }
 $jsondata = array();
-     $rediskey = 'position__minutes'.$publisher_id;
+     $rediskey = 'position__minutes'.$category_id.'__'.$publisher_id;
      if($nredis->exists($rediskey)){
      $allarticlekey = $nredis->hGetAll($rediskey);
     // $allarticlekey = $nredis->zRevRange($rediskey, 0, -1);
@@ -70,7 +70,7 @@ $jsondata = array();
         $response_desc = 'successful';
          //$score = strtotime($keywordfirstseendate);
        // $nredis->zAdd($key,$score, json_encode($jsondata));
-       $key = 'position__minutes' . $publisher_id;
+       $key = 'position__minutes'.$category_id.'__'.$publisher_id;
        $nredis->hSet($key, $rank, json_encode([
            'rank_minute' => $rank_minute,
            'rank' => $rank,

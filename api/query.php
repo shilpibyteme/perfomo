@@ -39,22 +39,21 @@ class PocModel
     }
      public function getarticlemasterdata($datapubid)
     {
-     $query = "SELECT dev_performo.article_master.*,dev_performo.publisher_category_mapping.*,dev_performo.article_master.id as articleid FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id WHERE pub_category_id IN($datapubid) ORDER BY pubdate DESC";
-
-        return $result = pg_query($query);
+      echo $query = "SELECT dev_performo.article_master.*,dev_performo.publisher_category_mapping.*,dev_performo.article_master.id as articleid FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id =dev_performo.article_master.pub_category_id WHERE pub_category_id IN($datapubid) ORDER BY pubdate DESC";
+        return $result = pg_query($query); 
 
     }
     public function getarticleuser($article_id)
     {
        $sqldataque = "SELECT name FROM dev_performo.puser JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.publisher_id=dev_performo.puser.publisher_id JOIN dev_performo.article_master ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE dev_performo.article_master.id='$article_id'";
-        $resultsqus = pg_query($sqldataque);
+        $resultsqus = pg_query($sqldataque); 
         return $resultsqus; 
        
 
     }
     public function getkeyword($article_id)
     {
-      echo  $querart = "SELECT * FROM dev_performo.article_keyword_mapping WHERE article_id='$article_id'";
+       $querart = "SELECT * FROM dev_performo.article_keyword_mapping WHERE article_id='$article_id'";
         $resultart = pg_query($querart); 
         return $resultart; 
         die;
@@ -62,7 +61,7 @@ class PocModel
     }
     public function getranking($article_id)
     {
-        $query = "SELECT * FROM dev_performo.article_ranking WHERE article_id='$article_id'"; 
+       $query = "SELECT * FROM dev_performo.article_ranking WHERE article_id='$article_id'"; 
          $result = pg_query($query);
         return $result; 
         
@@ -112,7 +111,7 @@ class PocModel
     }
     public function getarticlehours()
     {
-    echo $querys = "SELECT dev_performo.article_master.id as articleid,dev_performo.article_master.link as link FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON CAST(dev_performo.publisher_category_mapping.id AS integer) = dev_performo.article_master.pub_category_id WHERE  pubdate > NOW() - INTERVAL '5 HOURS' ORDER BY pubdate DESC"; 
+    $querys = "SELECT dev_performo.article_master.id as articleid,dev_performo.article_master.link as link FROM dev_performo.article_master JOIN dev_performo.publisher_category_mapping ON CAST(dev_performo.publisher_category_mapping.id AS integer) = dev_performo.article_master.pub_category_id WHERE  pubdate > NOW() - INTERVAL '5 HOURS' ORDER BY pubdate DESC"; 
         $resulthours = pg_query($querys);  
         return $resulthours; 
         
@@ -203,7 +202,16 @@ class PocModel
     }
     public function getsearchkeyword($category,$publisher_id,$keywords)
     {
-      echo $sqlq = "SELECT article_id FROM dev_performo.article_keyword_mapping JOIN dev_performo.article_master ON dev_performo.article_keyword_mapping.article_id=dev_performo.article_master.id JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE  dev_performo.publisher_category_mapping.category_id ='$category' AND dev_performo.publisher_category_mapping.publisher_id ='$publisher_id' AND dev_performo.article_keyword_mapping.keyword_name LIKE '%$keywords%'";
+       $sqlq="SELECT *
+				FROM ( 
+					SELECT * FROM dev_performo.article_keyword_mapping
+					JOIN dev_performo.article_master ON dev_performo.article_keyword_mapping.article_id=dev_performo.article_master.id
+					where dev_performo.article_keyword_mapping.keyword_name LIKE '%$keywords%' and dev_performo.article_master.pub_category_id in ( 
+					SELECT id FROM dev_performo.publisher_category_mapping WHERE category_id='$category'))  T1 
+				JOIN dev_performo.pub_cat_mapping_backup ON dev_performo.pub_cat_mapping_backup.id=T1.pub_category_id 
+				where dev_performo.pub_cat_mapping_backup.publisher_id in ($publisher_id)";
+
+      /* $sqlq = "SELECT article_id FROM dev_performo.article_keyword_mapping JOIN dev_performo.article_master ON dev_performo.article_keyword_mapping.article_id=dev_performo.article_master.id JOIN dev_performo.publisher_category_mapping ON dev_performo.publisher_category_mapping.id=dev_performo.article_master.pub_category_id WHERE  dev_performo.publisher_category_mapping.category_id ='$category' AND dev_performo.publisher_category_mapping.publisher_id ='$publisher_id' AND dev_performo.article_keyword_mapping.keyword_name LIKE '%$keywords%'";*/
         $resultsql = pg_query($sqlq);
    
         return $resultsql; 

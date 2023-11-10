@@ -20,7 +20,7 @@ else {
         echo json_encode(["error" => "Token keyword is missing"]);
         exit;
     }else{
-
+$queryStartTime = microtime(true);
 $date_from = isset($_REQUEST['date_from']) ? $_REQUEST['date_from'] : '';
 $dateto = isset($_REQUEST['date_to']) ? $_REQUEST['date_to'] : '';
 $dateToObj = DateTime::createFromFormat('Y-m-d', $dateto);
@@ -46,8 +46,8 @@ if (!empty($publisher_id)) {
                 $sqlquery = $data->insertuserlog($userdata);
 	   }
 }
-$jsondata = array();
-     $rediskey = 'early_offer'.$publisher_id.'__'.$date_from.'__'.$date_to;
+     $jsondata = array();
+    $rediskey = 'early_offer__'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
      if ($nredis->exists($rediskey)) {
         $allarticlenew = $nredis->zRevRange($rediskey, 0, -1);
         if ($allarticlenew) {
@@ -62,8 +62,9 @@ $jsondata = array();
             echo $jsonResultnew;
         }
     }else{
+    $queryStartTime = microtime(true);
+    $results = $data->getearlyoffer($date_from,$date_to,$category_id,$publisher_id);   
 
-    $results = $data->getearlyoffer($date_from,$date_to,$category_id,$publisher_id);     
     if(pg_num_rows($results)>0){
         while ($resultkey = pg_fetch_array($results)) {
         $rank = $resultkey['rank'];
@@ -75,19 +76,22 @@ $jsondata = array();
            $response_desc = 'successful';
             //$score = strtotime($keywordfirstseendate);
           // $nredis->zAdd($key,$score, json_encode($jsondata));
-          $key = 'early_offer'.$publisher_id.'__'.$date_from.'__'.$date_to;
+          $key = 'early_offer__'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
           $jsondata = [
             'early_keyword_name' => $keyword_name,
               'rank'=>$rank,
               'publisher_name'=>$publisher_name,
         ];
-          $score = $rank;
-          $nredis->zAdd($key, $score, json_encode($jsondata));
-          $ttlInSeconds = 3600;
-          $nredis->expire($key, $ttlInSeconds);
+         // $score = $rank;
+         // $nredis->zAdd($key, $score, json_encode($jsondata));
+        //  $ttlInSeconds = 3600;
+        //  $nredis->expire($key, $ttlInSeconds);
           response($keyword_name,$response_code,$response_desc);
         }
        }
+	   // Calculate the query execution time
+                $queryEndTime = microtime(true);
+                $queryExecutionTime = $queryEndTime - $queryStartTime;	
      }else{
          $emptyArray = array();
              echo json_encode($emptyArray);
@@ -104,4 +108,5 @@ function response($keyword_name,$response_code,$response_desc){
     $json_response = json_encode($response);
     echo $json_response;
 }
+echo "Query execution time: " . $queryExecutionTime . " seconds<br>";
 ?>

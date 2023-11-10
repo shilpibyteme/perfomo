@@ -31,7 +31,7 @@ $category_id = isset($_REQUEST['category_id']) ? $_REQUEST['category_id'] : '';
 $log_name = '[{"date_from":'.'"'.$date_from.'"'.',"date_to":'.'"'.$date_to.'"'.'}]';
 $createdate = date('Y-m-d H:i:s');
 $jsondata = array();
-     $rediskey ='missed_train__'.$publisher_id.'__'.$date_from.'__'.$date_to;
+     $rediskey ='missed_train__'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
      if ($nredis->exists($rediskey)) {
         $allarticlenew = $nredis->zRevRange($rediskey, 0, -1);
         if ($allarticlenew) {
@@ -59,7 +59,7 @@ $jsondata = array();
            $response_code = 0;
            $response_desc = 'successful';
            $score = strtotime($pubdate);
-          $key = 'missed_train__'.$publisher_id.'__'.$date_from.'__'.$date_to;
+          $key = 'missed_train__'.$category_id.'__'.$publisher_id.'__'.$date_from.'__'.$date_to;
           $jsondata = [
               'missed_train' => $keyword_name,
               'rank'=>$rank,
@@ -67,9 +67,9 @@ $jsondata = array();
               'publisher_id'=>$publisherid,
         ];
        
-       $nredis->zAdd($key, $score, json_encode($jsondata));
-       $ttlInSeconds = 3600;
-       $nredis->expire($key, $ttlInSeconds);
+      // $nredis->zAdd($key, $score, json_encode($jsondata));
+       //$ttlInSeconds = 3600;
+      // $nredis->expire($key, $ttlInSeconds);
        response($keyword_name,$rank,$publishername,$publisherid,$response_code,$response_desc);
     }else{
         $emptyArray = array();

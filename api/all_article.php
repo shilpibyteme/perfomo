@@ -51,7 +51,7 @@ $queryExecutionTime = 0;
 	$offset = $page_num - 10;
 	$limit =  $page_num - 1;
     if ($nredis->exists($rediskeynew)) {
-        $allarticlenew = $nredis->zRange($rediskeynew, $offset, $limit);
+        $allarticlenew = $nredis->zRevRange($rediskeynew, $offset, $limit);
         if ($allarticlenew) {
             $jsonArray = [];
             foreach ($allarticlenew as $jsonString) {

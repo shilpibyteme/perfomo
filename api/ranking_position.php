@@ -47,7 +47,7 @@ if (!empty($publisher_id)) {
  
 }
         $jsondata = array();
-     $rediskey = 'position__'.$publisher_id;
+     $rediskey = 'position__'.$category_id.'__'.$publisher_id;
      if($nredis->exists($rediskey)){
      $allarticlekey = $nredis->hGetAll($rediskey);
     // $allarticlekey = $nredis->zRevRange($rediskey, 0, -1);
@@ -65,7 +65,7 @@ if (!empty($publisher_id)) {
      $rank = $resultkey['rank'];
      $response_code = 0;
      $response_desc = 'successful';
-    $key = 'position__' . $publisher_id;
+    $key = 'position__'.$category_id.'__'.$publisher_id;
 	if($rank == 1 || $rank == 2 || $rank == 3){
     $nredis->hSet($key, $rank, json_encode([
         'rankcount' => $rankcount,
